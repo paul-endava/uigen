@@ -12,8 +12,8 @@ import { ChatInterface } from "@/components/chat/ChatInterface";
 import { FileTree } from "@/components/editor/FileTree";
 import { CodeEditor } from "@/components/editor/CodeEditor";
 import { PreviewFrame } from "@/components/preview/PreviewFrame";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { HeaderActions } from "@/components/HeaderActions";
+import { cn } from "@/lib/utils";
 
 interface MainContentProps {
   user?: {
@@ -60,51 +60,68 @@ export function MainContent({ user, project }: MainContentProps) {
               <div className="h-full flex flex-col bg-white">
                 {/* Top Bar */}
                 <div className="h-14 border-b border-neutral-200/60 px-6 flex items-center justify-between bg-neutral-50/50">
-                  <Tabs
-                    value={activeView}
-                    onValueChange={(v) =>
-                      setActiveView(v as "preview" | "code")
-                    }
-                  >
-                    <TabsList className="bg-white/60 border border-neutral-200/60 p-0.5 h-9 shadow-sm">
-                      <TabsTrigger value="preview" className="data-[state=active]:bg-white data-[state=active]:text-neutral-900 data-[state=active]:shadow-sm text-neutral-600 px-4 py-1.5 text-sm font-medium transition-all">Preview</TabsTrigger>
-                      <TabsTrigger value="code" className="data-[state=active]:bg-white data-[state=active]:text-neutral-900 data-[state=active]:shadow-sm text-neutral-600 px-4 py-1.5 text-sm font-medium transition-all">Code</TabsTrigger>
-                    </TabsList>
-                  </Tabs>
+                  <div className="flex bg-white/60 border border-neutral-200/60 p-0.5 h-9 rounded-lg shadow-sm gap-0.5">
+                    <button
+                      onClick={() => setActiveView("preview")}
+                      className={cn(
+                        "px-4 py-1.5 text-sm font-medium rounded-md transition-all",
+                        activeView === "preview"
+                          ? "bg-white text-neutral-900 shadow-sm"
+                          : "text-neutral-600 hover:text-neutral-900"
+                      )}
+                    >
+                      Preview
+                    </button>
+                    <button
+                      onClick={() => setActiveView("code")}
+                      className={cn(
+                        "px-4 py-1.5 text-sm font-medium rounded-md transition-all",
+                        activeView === "code"
+                          ? "bg-white text-neutral-900 shadow-sm"
+                          : "text-neutral-600 hover:text-neutral-900"
+                      )}
+                    >
+                      Code
+                    </button>
+                  </div>
                   <HeaderActions user={user} projectId={project?.id} />
                 </div>
 
                 {/* Content Area */}
-                <div className="flex-1 overflow-hidden bg-neutral-50">
-                  {activeView === "preview" ? (
-                    <div className="h-full bg-white">
-                      <PreviewFrame />
-                    </div>
-                  ) : (
-                    <ResizablePanelGroup
-                      direction="horizontal"
-                      className="h-full"
-                    >
-                      {/* File Tree */}
-                      <ResizablePanel
-                        defaultSize={30}
-                        minSize={20}
-                        maxSize={50}
+                <div className="flex-1 overflow-hidden bg-neutral-50 relative">
+                  {/* Preview - always mounted so the iframe doesn't reload on tab switch */}
+                  <div className={cn("absolute inset-0 bg-white", activeView !== "preview" && "invisible pointer-events-none")}>
+                    <PreviewFrame />
+                  </div>
+
+                  {/* Code editor - rendered only when active */}
+                  {activeView === "code" && (
+                    <div className="absolute inset-0">
+                      <ResizablePanelGroup
+                        direction="horizontal"
+                        className="h-full"
                       >
-                        <div className="h-full bg-neutral-50 border-r border-neutral-200">
-                          <FileTree />
-                        </div>
-                      </ResizablePanel>
+                        {/* File Tree */}
+                        <ResizablePanel
+                          defaultSize={30}
+                          minSize={20}
+                          maxSize={50}
+                        >
+                          <div className="h-full bg-neutral-50 border-r border-neutral-200">
+                            <FileTree />
+                          </div>
+                        </ResizablePanel>
 
-                      <ResizableHandle className="w-[1px] bg-neutral-200 hover:bg-neutral-300 transition-colors" />
+                        <ResizableHandle className="w-[1px] bg-neutral-200 hover:bg-neutral-300 transition-colors" />
 
-                      {/* Code Editor */}
-                      <ResizablePanel defaultSize={70}>
-                        <div className="h-full bg-white">
-                          <CodeEditor />
-                        </div>
-                      </ResizablePanel>
-                    </ResizablePanelGroup>
+                        {/* Code Editor */}
+                        <ResizablePanel defaultSize={70}>
+                          <div className="h-full bg-white">
+                            <CodeEditor />
+                          </div>
+                        </ResizablePanel>
+                      </ResizablePanelGroup>
+                    </div>
                   )}
                 </div>
               </div>
